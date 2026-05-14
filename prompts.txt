@@ -1,3 +1,5 @@
+Prompt 1:
+
 Create a clean Playwright Python scraper skeleton using sync_playwright.
 
 Requirements:
@@ -15,6 +17,7 @@ Do not implement extraction logic yet.
 
 
 
+Prompt 2:
 
 I manually inspected the Ekantipur entertainment page.
 
@@ -34,11 +37,11 @@ Image:
 
 Author:
 .author-name 
-
 Modify the existing scraper to:
 - navigate to the entertainment section
 - wait properly for article cards
-- extract the first 5 articles
+- extract the first 
+5 articles
 - extract:
   - title
   - image_url
@@ -52,7 +55,7 @@ Modify the existing scraper to:
 - keep the code simple and readable
 
 
-
+Prompt 3:
 
 Add extraction logic for the Cartoon of the Day section.
 
@@ -89,7 +92,7 @@ Requirements:
 
 
 
-
+Prompt 4:
 
 The entertainment image selectors are correct.
 
