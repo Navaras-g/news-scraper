@@ -34,22 +34,23 @@ def _normalize_whitespace(text: str) -> str:
 
 def _image_url_from_card(card: Locator, page_url: str) -> str | None:
     """
-    Resolve hero image URL from `.category-image a`.
+    Resolve the listing thumbnail from `div.category-image` inside the card.
 
-    Prefer `img[src]` inside the anchor; otherwise use the anchor `href`
-    (some cards link the image area directly).
+    Prefer `img.loaded` (the site adds this class when the real asset is ready).
+    If that node is not there yet, fall back to any `img` in the same container.
+    Only `src` is read so we never surface article page URLs from surrounding anchors.
     """
-    anchor = card.locator(".category-image a")
-    if anchor.count() == 0:
-        return None
+    loaded = card.locator("div.category-image img.loaded")
+    if loaded.count() > 0:
+        target = loaded.first
+    else:
+        plain = card.locator("div.category-image img")
+        if plain.count() == 0:
+            return None
+        target = plain.first
 
-    img = anchor.locator("img")
-    raw = None
-    if img.count() > 0:
-        raw = img.first.get_attribute("src")
-    if not raw:
-        raw = anchor.first.get_attribute("href")
-    if not raw:
+    raw = target.get_attribute("src")
+    if not raw or not raw.strip():
         return None
     return urljoin(page_url, raw.strip())
 
@@ -58,7 +59,7 @@ def extract_entertainment_articles(page: Page) -> list[dict]:
     """
     Walk the first `.category-inner-wrapper` cards and build article dicts.
 
-    Each card is expected to contain title (`h2 a`), image (`.category-image a`),
+    Each card is expected to contain title (`h2 a`), image (`div.category-image img`),
     and optionally author (`.author-name`). Category is always the entertainment label.
     """
     # One locator for all cards; scope child queries with `.nth(i)` so each field
@@ -66,6 +67,13 @@ def extract_entertainment_articles(page: Page) -> list[dict]:
     cards = page.locator(".category-inner-wrapper")
     # Wait until at least one listing card is on screen (dynamic section).
     cards.first.wait_for(state="visible")
+
+    # Thumbnails below the fold often lazy-load: scroll each card we will read into
+    # view first, then pause briefly so `img.loaded` / `src` can populate.
+    n_scroll = min(ARTICLE_LIMIT, cards.count())
+    for i in range(n_scroll):
+        cards.nth(i).scroll_into_view_if_needed()
+    page.wait_for_timeout(800)
 
     articles: list[dict] = []
     n = min(ARTICLE_LIMIT, cards.count())
@@ -79,7 +87,7 @@ def extract_entertainment_articles(page: Page) -> list[dict]:
             if title_loc.count() > 0
             else ""
         )
-        # Thumbnail: nested img preferred, else fall back to the anchor href.
+        # Thumbnail: real file from `img.loaded`, else any `img` under `div.category-image`.
         image_url = _image_url_from_card(card, page.url)
         # Byline is optional on some promos; locator count 0 → None.
         author = _text_or_none(card.locator(".author-name"))
