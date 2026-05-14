@@ -1,6 +1,12 @@
 {
   "entertainment_news": [
     {
+      "title": "कान्समा फेसन स्टेटमेन्ट : विवादले निम्त्याएकाे ‘ड्रेस कोड’ को नियम",
+      "image_url": "https://assets-cdn-api.ekantipur.com/thumb.php?src=https://assets-cdn.ekantipur.com/uploads/source/news/kantipur/2026/third-party/julia-roberts-2016-1452026102041-1452026120535-1000x0.jpg&w=701&h=0",
+      "category": "मनोरञ्जन",
+      "author": "एजेन्सी"
+    },
+    {
       "title": "‘गरिबको चमेली’ : बालेनले गाए, बालेनतिरै फर्कियो",
       "image_url": "https://assets-cdn-api.ekantipur.com/thumb.php?src=https://assets-cdn.ekantipur.com/uploads/source/news/kantipur/2026/miscellaneous/sukumbashiprotestatmaitighar202605084266-1252026110024-1000x0.jpg&w=701&h=0",
       "category": "मनोरञ्जन",
@@ -8,7 +14,7 @@
     },
     {
       "title": "प्रतिबन्ध लागेको ५५ वर्षपछि कान्समा ‘द डेभिल्स’",
-      "image_url": "https://assets-cdn-api.ekantipur.com/thumb.php?src=https://assets-cdn.ekantipur.com/uploads/source/news/kantipur/2026/the-devils-1252026100643-1000x0.jpg&w=701&h=0",
+      "image_url": "https://ekantipur.com/entertainment/2026/05/12/the-devils-to-be-screened-at-cannes-55-years-after-ban-00-45.html",
       "category": "मनोरञ्जन",
       "author": "कान्तिपुर संवाददाता"
     },
@@ -23,13 +29,11 @@
       "image_url": "https://ekantipur.com/entertainment/2026/05/11/cannes-from-tuesday-these-films-can-grab-the-worlds-attention-20-03.html",
       "category": "मनोरञ्जन",
       "author": "इकान्तिपुर डेस्क"
-    },
-    {
-      "title": "‘सर्ट फिल्म डेभलपमेन्ट ल्याब’मा ६ प्रोजेक्ट छनोट",
-      "image_url": "https://ekantipur.com/entertainment/2026/05/09/6-projects-selected-for-short-film-development-lab-34-19.html",
-      "category": "मनोरञ्जन",
-      "author": "कान्तिपुर संवाददाता"
     }
   ],
-  "cartoon_of_the_day": {}
+  "cartoon_of_the_day": {
+    "title": "गजब छ बा! -",
+    "image_url": "https://assets-cdn-api.ekantipur.com/thumb.php?src=https://assets-cdn.ekantipur.com/uploads/source/news/kantipur/2022/third-party/editorial-cartoon-kantipur-830130-1352026064155-1000x0.jpg&w=601&h=0",
+    "author": null
+  }
 }

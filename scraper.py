@@ -1,13 +1,15 @@
-"""Ekantipur scraper: entertainment listing extraction."""
+"""Ekantipur scraper: entertainment listing and cartoon-of-the-day extraction."""
 
 import json
+import re
 from pathlib import Path
 from urllib.parse import urljoin
 
-from playwright.sync_api import Locator, Page, sync_playwright
+from playwright.sync_api import Locator, Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 # Target site and output file (relative to current working directory when run).
 EKANTIPUR_URL = "https://ekantipur.com"
+CARTOON_URL = "https://ekantipur.com/cartoon"
 OUTPUT_PATH = Path("output.json")
 
 # Fixed Nepali label for this section (site UI may vary; we normalize here).
@@ -23,6 +25,11 @@ def _text_or_none(loc: Locator) -> str | None:
         return None
     text = loc.first.inner_text().strip()
     return text or None
+
+
+def _normalize_whitespace(text: str) -> str:
+    """Turn runs of whitespace/newlines into a single space for clean JSON titles."""
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def _image_url_from_card(card: Locator, page_url: str) -> str | None:
@@ -88,6 +95,77 @@ def extract_entertainment_articles(page: Page) -> list[dict]:
     return articles
 
 
+def extract_cartoon_of_the_day(page: Page) -> dict:
+    """
+    Read the Cartoon of the Day block on `/cartoon`.
+
+    Everything is scoped under `div.cartoon-wrapper` so we only touch the
+    cartoon feature, not unrelated images elsewhere on the page.
+
+    Returns a small dict suitable for `output.json` under `cartoon_of_the_day`.
+    Missing fields use None so downstream code can branch safely.
+    """
+    # Start with a predictable shape for beginners consuming the JSON file.
+    result: dict = {"title": None, "image_url": None, "author": None}
+
+    # --- Wait for the section shell (layout exists before inner bits fill in) ---
+    section = page.locator("div.cartoon-wrapper").first
+    section.wait_for(state="visible")
+
+    # --- Image: prefer the lazy-loaded node (`img.loaded`), fall back to any image ---
+    # The site adds `.loaded` after the file is ready; if that never appears in time,
+    # we still try a plain `img` so we do not return empty-handed on slow networks.
+    img_loc = section.locator(".cartoon-image img.loaded")
+    try:
+        img_loc.first.wait_for(state="visible", timeout=20_000)
+    except PlaywrightTimeoutError:
+        img_loc = section.locator(".cartoon-image img")
+        if img_loc.count() == 0:
+            img_loc = None
+        else:
+            try:
+                img_loc.first.wait_for(state="visible", timeout=10_000)
+            except PlaywrightTimeoutError:
+                img_loc = None
+
+    if img_loc is not None and img_loc.count() > 0:
+        raw_src = img_loc.first.get_attribute("src")
+        if raw_src:
+            result["image_url"] = urljoin(page.url, raw_src.strip())
+
+    # --- Caption lives in `.cartoon-description`; the date is a child `div.date` ---
+    desc = section.locator("div.cartoon-description")
+    if desc.count() == 0:
+        return result
+
+    # `inner_text()` mirrors what a reader sees, including the date line.
+    full_caption = desc.first.inner_text().strip()
+    date_loc = desc.locator("div.date")
+    date_text = (_text_or_none(date_loc) or "").strip()
+
+    # Strip the date string once so the title is only the editorial caption.
+    caption = full_caption
+    if date_text:
+        caption = caption.replace(date_text, "", 1).strip()
+    caption = _normalize_whitespace(caption)
+
+    # --- Author: try a byline node first (same pattern as other Kantipur pages) ---
+    author = _text_or_none(section.locator(".author-name"))
+
+    # If there is no `.author-name`, many strips encode "Title - Cartoonist" in text.
+    title: str | None = caption or None
+    if author is None and caption and " - " in caption:
+        left, right = caption.rsplit(" - ", 1)
+        left, right = left.strip(), right.strip()
+        if left and right:
+            title = left
+            author = right
+
+    result["title"] = title
+    result["author"] = author
+    return result
+
+
 def main() -> None:
     entertainment_news: list = []
     cartoon_of_the_day: dict = {}
@@ -101,16 +179,13 @@ def main() -> None:
         # --- Bootstrap: open homepage (networkidle gives a stable first paint) ---
         page.goto(EKANTIPUR_URL, wait_until="networkidle")
 
-        page.goto(
-        EKANTIPUR_URL + "/entertainment",
-            wait_until="networkidle"
-        )
-
-        page.wait_for_timeout(2000)
+        # --- Entertainment listing (direct URL matches the live section) ---
+        page.goto(EKANTIPUR_URL + "/entertainment", wait_until="networkidle")
         entertainment_news = extract_entertainment_articles(page)
 
-        # --- Other sections (not built yet) ---
-        cartoon_of_the_day = {}
+        # --- Cartoon of the Day: dedicated page, separate extraction function ---
+        page.goto(CARTOON_URL, wait_until="domcontentloaded")
+        cartoon_of_the_day = extract_cartoon_of_the_day(page)
 
     finally:
         if browser is not None:
