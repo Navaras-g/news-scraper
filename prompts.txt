@@ -1,0 +1,112 @@
+Create a clean Playwright Python scraper skeleton using sync_playwright.
+
+Requirements:
+- Open https://ekantipur.com
+- Launch chromium with headless=False
+- Wait for networkidle
+- Create empty structures:
+  entertainment_news = []
+  cartoon_of_the_day = {}
+- Save final data into output.json using ensure_ascii=False and indent=2
+- Add proper try/finally browser cleanup
+- Add comments explaining each section
+
+Do not implement extraction logic yet.
+
+
+
+
+I manually inspected the Ekantipur entertainment page.
+
+Use these selectors:
+
+Entertainment page:
+a[href='/entertainment']
+
+Article container:
+.category-inner-wrapper
+
+Title:
+h2 a
+
+Image:
+.category-image a 
+
+Author:
+.author-name 
+
+Modify the existing scraper to:
+- navigate to the entertainment section
+- wait properly for article cards
+- extract the first 5 articles
+- extract:
+  - title
+  - image_url
+  - category
+  - author
+- use "मनोरञ्जन" as category
+- safely handle missing authors using None
+- use Playwright locators
+- avoid XPath
+- add comments explaining the extraction logic
+- keep the code simple and readable
+
+
+
+
+Add extraction logic for the Cartoon of the Day section.
+
+Navigate directly to:
+https://ekantipur.com/cartoon
+
+I manually inspected the page and found these selectors:
+
+Section container:
+div.cartoon-wrapper
+
+Image:
+.cartoon-image img.loaded
+
+Description/caption area:
+div.cartoon-description
+
+Date inside description:
+div.date
+
+Requirements:
+- navigate directly to the cartoon page using page.goto(...)
+- wait properly for the cartoon section to load
+- extract the cartoon image URL
+- use the description/caption text as the title
+- exclude the date text from the title extraction
+- extract author if available, otherwise use None
+- save results into cartoon_of_the_day dictionary
+- safely handle missing elements
+- use Playwright locators only
+- avoid XPath
+- keep extraction logic separate, readable, and beginner-friendly
+- add comments explaining the logic
+
+
+
+
+
+The entertainment image selectors are correct.
+
+I verified that all article images use:
+div.category-image img.loaded
+
+However, only the top articles extract image URLs correctly while lower articles return null.
+
+This appears to be caused by lazy loading or delayed image rendering.
+
+Please improve ONLY the entertainment image extraction flow while keeping everything else unchanged.
+
+Requirements:
+- before extracting articles, trigger lazy loading by scrolling the page
+- use Playwright methods only
+- add a short wait after scrolling so images can load
+- keep the existing image selector logic intact
+- do not modify title/author/category logic
+- keep the code simple and readable
+- do not modify cartoon extraction logic
